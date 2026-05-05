@@ -65,3 +65,46 @@ Thumbs.db
 # Test files (optional)
 test_*.py
 *_test.py
+
+# Project specific
+alert_monitor/*.log
+*.lock
+*.flag
+*.tmp
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Cache
+.cache/
+*.cache
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Archive
+*.zip
+*.rar
+*.7z
+
+# Test files (optional)
+test_*.py
+*_test.py

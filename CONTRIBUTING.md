@@ -52,6 +52,95 @@ venv\Scripts\activate  # On Windows
 # Install dependencies
 pip install -r requirements.txt
 
+# Install pre-commit hooks
+pip install pre-commit
+pre-commit install
+```
+
+## Coding Standards
+
+### Code Quality Tools
+
+This project uses automated code quality tools:
+
+- **Black**: Code formatting
+- **Flake8**: Linting and style checking
+- **Pre-commit**: Automated checks before commits
+
+Run quality checks:
+```bash
+pre-commit run --all-files
+```
+
+### Python Style Guidelines
+
+- Follow PEP 8 style guidelines
+- Maximum line length: 127 characters
+- Use meaningful variable and function names
+- Add docstrings to functions and classes
+- Use type hints where appropriate
+
+### Commit Messages
+
+- Use clear, descriptive commit messages
+- Start with a verb in imperative mood (e.g., "Add", "Fix", "Update")
+- Keep the first line under 50 characters
+- Reference issue numbers when applicable
+
+Example:
+```
+Fix audio playback synchronization
+
+- Resolve timing issues in player service
+- Add proper event handling for audio events
+- Update tests for synchronization logic
+
+Closes #123
+```
+
+### Testing
+
+- Write tests for new features and bug fixes
+- Ensure all existing tests pass before submitting PR
+- Test edge cases and error conditions
+- Use descriptive test names and assertions
+
+Run tests:
+```bash
+python test_system.py
+```
+
+## Pull Request Process
+
+1. Ensure your PR addresses a specific issue or implements a requested feature
+2. Update documentation (README, CHANGELOG) if needed
+3. Add or update tests for new functionality
+4. Ensure all CI checks pass (GitHub Actions)
+5. Request review from maintainers
+6. Address any review feedback
+7. Squash commits if requested before merge
+
+## Documentation
+
+- Update README.md for significant user-facing changes
+- Add docstrings to new functions and classes
+- Update CHANGELOG.md for all user-facing changes
+- Keep inline comments clear and helpful
+- Update issue/PR templates if needed
+
+## CI/CD
+
+The project uses GitHub Actions for continuous integration:
+
+- **Automated Testing**: Runs on every push and PR
+- **Code Quality**: Black formatting and Flake8 linting
+- **Multi-platform**: Tests on Windows, Linux, and macOS
+
+Ensure your changes don't break the CI pipeline.
+
+# Install dependencies
+pip install -r requirements.txt
+
 # Run tests
 python test_system.py
 ```

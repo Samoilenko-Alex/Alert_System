@@ -98,6 +98,79 @@ python web_app.py
 After launch, open in browser:
 http://localhost:5000
 
+---
+
+## Development
+
+### Prerequisites
+- Python 3.8 or higher
+- Git
+- Windows PowerShell
+
+### Setup Development Environment
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/kyiv-alert.git
+cd kyiv-alert
+```
+
+2. Create virtual environment:
+```bash
+python -m venv venv
+venv\Scripts\activate
+```
+
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+4. Install pre-commit hooks:
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+### Code Quality
+
+This project uses:
+- **Black** for code formatting
+- **Flake8** for linting
+- **Pre-commit** for automated checks
+
+Run code quality checks:
+```bash
+pre-commit run --all-files
+```
+
+### Testing
+
+Run the test suite:
+```bash
+python test_system.py
+```
+
+### Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## CI/CD
+
+This project uses GitHub Actions for continuous integration:
+
+- **Automated Testing**: Runs on every push and PR
+- **Code Quality**: Flake8 linting and Black formatting checks
+- **Multi-platform**: Tests on Windows (primary), Linux, and macOS
+
+[![CI](https://github.com/yourusername/kyiv-alert/workflows/CI/badge.svg)](https://github.com/yourusername/kyiv-alert/actions)
+
 ### Control
 Via web panel:
 - Enable/disable scripts (Monitor, Player, Scheduler)

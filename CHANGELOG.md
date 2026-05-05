@@ -5,6 +5,25 @@ All notable changes to the Kyiv Alert Monitor System will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- GitHub Actions CI/CD pipeline
+- Pre-commit hooks for code quality
+- Issue and PR templates
+- Comprehensive .gitignore
+- Development documentation
+
+### Changed
+- Improved project structure
+- Enhanced README with development guidelines
+- Cleaned up code comments and logging
+
+### Fixed
+- Repository structure cleanup
+- Removed empty directories
+- Updated dependencies
+
 ## [2.0.0] - 2026-05-05
 
 ### Added
