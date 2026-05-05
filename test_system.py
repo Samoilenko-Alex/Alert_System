@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Тест всей системы Kyiv Alert Monitor
-Проверяет работу всех компонентов: monitor, player, scheduler, web
+Kyiv Alert Monitor system test
+Tests all components: monitor, player, scheduler, web
 """
 
 import os
@@ -12,30 +12,25 @@ import subprocess
 import signal
 from pathlib import Path
 
-# Paths
 SCRIPT_DIR = Path(__file__).parent
 BASE_DIR = SCRIPT_DIR
 WEB_URL = "http://localhost:5000"
-TEST_DURATION = 30  # секунды
+TEST_DURATION = 30
 
 def log(msg):
     print(f"[TEST] {msg}")
 
 def check_service_running(name):
-    """Check if service is running by lock file or log file"""
     lock_file = BASE_DIR / "alert_monitor" / f"{name}_lock.lock"
     log_file = BASE_DIR / "alert_monitor" / f"{name}.log"
 
-    # For player, check lock file existence (it's created on start, removed on stop)
     if name == "player":
         return lock_file.exists()
 
-    # For monitor and scheduler, check if log file exists and was recently modified
     if name in ["monitor", "scheduler"] and log_file.exists():
         try:
             mtime = os.path.getmtime(log_file)
-            # If log was modified in last 5 minutes, assume service is running
-            if time.time() - mtime < 300:  # 5 minutes
+            if time.time() - mtime < 300:
                 return True
         except:
             pass
@@ -43,7 +38,6 @@ def check_service_running(name):
     return False
 
 def test_web_server():
-    """Тест веб-сервера"""
     log("Testing web server...")
     try:
         r = requests.get(f"{WEB_URL}/status", timeout=5)

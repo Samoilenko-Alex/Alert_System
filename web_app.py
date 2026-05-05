@@ -12,21 +12,19 @@ from flask_cors import CORS
 
 from alert_monitor.core.flag_manager import flag_manager
 
-# Налаштування логування
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [WEB] %(message)s',
     handlers=[logging.StreamHandler()]
 )
 
-app = Flask(__name__, 
-            template_folder='templates',      # явно вказуємо папку шаблонів
-            static_folder='templates',        # статичні файли тепер з templates/
-            static_url_path='/static')        # URL буде /static/...
+app = Flask(__name__,
+            template_folder='templates',
+            static_folder='templates',
+            static_url_path='/static')
 
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-# --- КОНФІГУРАЦІЯ ---
 PYTHON_EXE = r"C:\kyiv_alert\venv\Scripts\python.exe"
 BASE_DIR = Path(r"C:\kyiv_alert\alert_monitor")
 AUDIO_DIR = Path(r"C:\kyiv_alert\silence_moment")
@@ -43,11 +41,111 @@ active_resources = {name: {"proc": None, "file": None} for name in SCRIPTS}
 def get_tail(name: str, lines_count: int = 20) -> str:
     log_path = BASE_DIR / f"{name}.log"
     if not log_path.exists():
-        return "📡 Очікування ініціалізації логів..."
+        return "Waiting for log initialization..."
 
     try:
         with open(log_path, "r", encoding="utf-8", errors="replace") as f:
             lines = f.readlines()
+            return "".join(lines[-lines_count:])
+    except Exception as e:
+        return f"Log access error: {e}"
+
+
+def is_running(name: str) -> bool:
+    res = active_resources.get(name)
+    if not res:
+        return False
+
+    if res["proc"] and res["proc"].poll() is None:
+        return True
+
+    if name == "player":
+        lock_file = BASE_DIR / "player_lock.lock"
+        if lock_file.exists():
+            try:
+                with open(lock_file, "r") as f:
+                    pid = int(f.read().strip())
+                os.kill(pid, 0)
+                return True
+            except (OSError, ValueError):
+                return False
+    return False
+
+
+def stop_script(name: str):
+    res = active_resources[name]
+    stopped = False
+
+    if res["proc"] and res["proc"].poll() is None:
+        try:
+            subprocess.run(['taskkill', '/F', '/T', '/PID', str(res["proc"].pid)],
+                           capture_output=True, check=False)
+            res["proc"].wait(timeout=2)
+            stopped = True
+        except:
+            if res["proc"]:
+                res["proc"].kill()
+            stopped = True
+
+    if name == "player":
+        lock_file = BASE_DIR / "player_lock.lock"
+        if lock_file.exists():
+            try:
+                with open(lock_file, "r") as f:
+                    pid = int(f.read().strip())
+                subprocess.run(['taskkill', '/F', '/T', '/PID', str(pid)], capture_output=True)
+            except:
+                pass
+            try:
+                lock_file.unlink()
+            except:
+                pass
+            stopped = True
+
+    if res["file"]:
+        try:
+            res["file"].close()
+        except:
+            pass
+
+    if stopped:
+        logging.info(f"Script stopped: {name}")
+
+    active_resources[name] = {"proc": None, "file": None}
+
+
+def start_script(name: str):
+    if name not in SCRIPTS or not os.path.exists(SCRIPTS[name]):
+        logging.error(f"File not found: {SCRIPTS.get(name)}")
+        return
+
+    if name == "player":
+        lock_file = BASE_DIR / "player_lock.lock"
+        if lock_file.exists():
+            try:
+                with open(lock_file, "r") as f:
+                    pid = int(f.read().strip())
+                os.kill(pid, 0)
+                logging.info("Player already running (lock file)")
+                return
+            except (OSError, ValueError):
+                try:
+                    lock_file.unlink()
+                except:
+                    pass
+
+    stop_script(name)
+
+    log_path = BASE_DIR / f"{name}.log"
+    log_file = open(log_path, "a", encoding="utf-8")
+
+    env = os.environ.copy()
+    env["PYTHONUTF8"] = "1"
+    env["PYTHONIOENCODING"] = "utf-8"
+
+    proc = subprocess.Popen(
+        [PYTHON_EXE, "-u", SCRIPTS[name]],
+        stdout=log_file,
             return "".join(lines[-lines_count:])
     except Exception as e:
         return f"⚠️ Помилка доступу до логу: {e}"
@@ -155,12 +253,12 @@ def start_script(name: str):
     )
 
     active_resources[name] = {"proc": proc, "file": log_file}
-    logging.info(f"✅ Запущено скрипт: {name} (PID: {proc.pid})")
+    logging.info(f"Script started: {name} (PID: {proc.pid})")
 
 
 @atexit.register
 def cleanup_on_exit():
-    logging.info("Виконується cleanup при завершенні веб-сервера...")
+    logging.info("Cleanup on web server exit...")
     for name in SCRIPTS:
         stop_script(name)
     flag_manager.clear_all()
@@ -170,29 +268,23 @@ def clear_all_flags():
     flag_manager.clear_all()
 
 
-# ====================== СТАТИЧНІ ФАЙЛИ ======================
-
 @app.route('/static/<path:filename>')
 def serve_static(filename):
-    """Обслуговування CSS, JS та інших статичних файлів"""
     return send_from_directory('templates', filename)
 
 
 @app.route('/static/audio/<path:filename>')
 def serve_audio(filename):
-    """Обслуговування аудіофайлів"""
     decoded_name = unquote(filename)
-    logging.info(f"🔊 Запит аудіо: {decoded_name}")
-    
+    logging.info(f"Audio request: {decoded_name}")
+
     response = make_response(send_from_directory(str(AUDIO_DIR), decoded_name))
-    
+
     if decoded_name.endswith('.wav'):
         response.headers['Content-Type'] = 'audio/wav'
-    
+
     return response
 
-
-# ====================== РОУТИ ======================
 
 @app.route('/')
 def index():
@@ -201,13 +293,13 @@ def index():
 
 @app.route('/status')
 def get_status():
-    states = {n: ("ПРАЦЮЄ" if is_running(n) else "ЗУПИНЕНО") for n in SCRIPTS}
+    states = {n: ("RUNNING" if is_running(n) else "STOPPED") for n in SCRIPTS}
 
-    status_text = "ЧИСТО"
+    status_text = "CLEAR"
     if flag_manager.is_set("moment"):
-        status_text = "🕯️ ХВИЛИНА МОВЧАННЯ"
+        status_text = "MINUTE OF SILENCE"
     elif flag_manager.is_set("alarm"):
-        status_text = "🚨 ПОВІТРЯНА ТРИВОГА"
+        status_text = "AIR RAID ALERT"
 
     return jsonify({
         "status_text": status_text,

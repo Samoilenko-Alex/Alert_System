@@ -7,7 +7,7 @@ from pathlib import Path
 from core.flag_manager import flag_manager
 
 SCRIPT_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
-FLAG_MOMENT = SCRIPT_DIR / "moment_active.flag"   # для сумісності, хоча краще через manager
+FLAG_MOMENT = SCRIPT_DIR / "moment_active.flag"
 LOG_FILE = SCRIPT_DIR / "scheduler.log"
 
 logging.basicConfig(
@@ -22,7 +22,7 @@ def should_create_moment(now: datetime, last_played_date: str) -> bool:
 
 
 def start_scheduler():
-    logging.info("--- ПЛАНУВАЛЬНИК ХВИЛИНИ МОВЧАННЯ ЗАПУЩЕНО ---")
+    logging.info("Minute of Silence Scheduler started")
     last_played_date = ""
 
     try:
@@ -30,23 +30,21 @@ def start_scheduler():
             now = datetime.now()
 
             if should_create_moment(now, last_played_date):
-                logging.info(f"🕯️ 09:00 — Спроба створити флаг хвилини мовчання для {now.strftime('%Y-%m-%d')}")
+                logging.info(f"09:00 — Creating minute of silence flag for {now.strftime('%Y-%m-%d')}")
 
-                # Використовуємо FlagManager з пріоритетною логікою
                 if flag_manager.set_flag("moment"):
                     last_played_date = now.strftime('%Y-%m-%d')
-                    logging.info("✅ Флаг хвилини мовчання створено")
+                    logging.info("Minute of silence flag created")
                 else:
-                    logging.info("⏭️ Флаг не створено (ймовірно активна тривога)")
+                    logging.info("Flag not created (alert likely active)")
 
-            # Оптимізований сон
             if now.hour == 8 and now.minute >= 59:
                 time.sleep(5)
             else:
                 time.sleep(30)
 
     except KeyboardInterrupt:
-        logging.info("Планувальник зупинено.")
+        logging.info("Scheduler stopped.")
     except Exception as e:
         logging.critical(f"Критична помилка: {e}")
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Скрипт для имитации тревоги через флаги
-Использование: python simulate_alert.py <alarm|cancel|moment|clear>
+Alert simulation script
+Usage: python simulate_alert.py <alarm|cancel|moment|clear>
 """
 
 import os
@@ -18,13 +18,11 @@ FLAGS = {
 }
 
 def set_flag(flag_type, message="simulation"):
-    """Установить флаг"""
     if flag_type not in FLAGS:
         print(f"Error: Unknown flag type '{flag_type}'. Use: alarm, cancel, moment, clear")
         return False
 
     if flag_type == "clear":
-        # Очистить все флаги
         for path in FLAGS.values():
             if path.exists():
                 try:
@@ -34,10 +32,8 @@ def set_flag(flag_type, message="simulation"):
                     print(f"Error clearing {path.name}: {e}")
         return True
 
-    # Установить флаг
     flag_path = FLAGS[flag_type]
 
-    # Для alarm - очистить cancel, для cancel - очистить alarm и moment
     if flag_type == "alarm" and FLAGS["cancel"].exists():
         try:
             os.remove(FLAGS["cancel"])

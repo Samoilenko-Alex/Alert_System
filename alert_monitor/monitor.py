@@ -11,7 +11,6 @@ from pathlib import Path
 from dotenv import load_dotenv
 from core.flag_manager import flag_manager
 
-# --- ІНІЦІАЛІЗАЦІЯ ШЛЯХІВ ---
 SCRIPT_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
 BASE_DIR = SCRIPT_DIR
 
@@ -20,7 +19,6 @@ load_dotenv(SCRIPT_DIR / ".env")
 HISTORY_FILE = SCRIPT_DIR / "alerts_history.json"
 LOG_FILE = SCRIPT_DIR / "monitor.log"
 
-# --- НАЛАШТУВАННЯ ЛОГУВАННЯ ---
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [MONITOR] %(message)s',
@@ -30,12 +28,10 @@ logging.basicConfig(
     ]
 )
 
-# --- КОНФІГУРАЦІЯ ---
 ALERTS_TOKEN = os.getenv("ALERTS_TOKEN", "e422d401:f7fae9e16602c92d41aec965a92d02e3")
 ALERTS_API_URL = os.getenv("ALERTS_API_URL", "https://api.ukrainealarm.com/api/v3/alerts/31")
 CHECK_INTERVAL = int(os.getenv("CHECK_INTERVAL", 30))
 
-# Глобальна змінна для збереження часу початку тривоги (між циклами)
 CURRENT_ALERT_START_FILE = SCRIPT_DIR / "current_alert_start.tmp"
 
 

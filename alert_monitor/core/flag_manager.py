@@ -1,7 +1,6 @@
 """
-core/flag_manager.py
-Централізований менеджер флагів для системи Kyiv Alert.
-Забезпечує пріоритети та безпечну роботу з файлами-флагами.
+Flag manager for Kyiv Alert system.
+Provides centralized flag management with priorities and safe file operations.
 """
 
 import os
@@ -12,7 +11,7 @@ from datetime import datetime
 class FlagManager:
     def __init__(self, base_dir: Path = None):
         if base_dir is None:
-            base_dir = Path(__file__).parent.parent  # alert_monitor/
+            base_dir = Path(__file__).parent.parent
 
         self.base_dir = Path(base_dir)
         self.flags = {
@@ -23,18 +22,16 @@ class FlagManager:
         self.logger = logging.getLogger("FlagManager")
 
     def _safe_write(self, flag_path: Path, content: str = "") -> bool:
-        """Атомарний запис флага (через тимчасовий файл)."""
         temp_path = None
         try:
             temp_path = flag_path.with_suffix(".tmp")
             with open(temp_path, "w", encoding="utf-8") as f:
                 f.write(content or datetime.now().isoformat())
 
-            # Атомарна заміна
             os.replace(str(temp_path), str(flag_path))
             return True
         except Exception as e:
-            self.logger.error(f"Помилка запису флага {flag_path.name}: {e}")
+            self.logger.error(f"Flag write error {flag_path.name}: {e}")
             if temp_path and temp_path.exists():
                 try:
                     temp_path.unlink()
@@ -44,8 +41,7 @@ class FlagManager:
 
     def set_flag(self, name: str, content: str = "") -> bool:
         """
-        Встановлює флаг з урахуванням пріоритетів:
-        cancel > alarm > moment
+        Set flag with priorities: cancel > alarm > moment
         """
         if name not in self.flags:
             self.logger.error(f"Невідомий флаг: {name}")

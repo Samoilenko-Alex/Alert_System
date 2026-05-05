@@ -6,7 +6,6 @@ from pathlib import Path
 
 from core.flag_manager import flag_manager
 
-# --- КОНФІГУРАЦІЯ ---
 SCRIPT_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
 AUDIO_DIR = Path(r"C:\kyiv_alert\silence_moment")
 
@@ -35,10 +34,9 @@ def stop_all_audio():
 
 
 def play_event(name: str) -> bool:
-    """Відтворює звук асинхронно (alarm більше не блокує цикл)."""
     sound_path = SOUNDS.get(name)
     if not sound_path or not sound_path.exists():
-        logging.error(f"❌ Файл {name}.wav не знайдено")
+        logging.error(f"Audio file {name}.wav not found")
         return False
 
     flags = winsound.SND_FILENAME | winsound.SND_ASYNC
@@ -46,7 +44,7 @@ def play_event(name: str) -> bool:
     try:
         stop_all_audio()
         winsound.PlaySound(str(sound_path), flags)
-        logging.info(f"▶️ Відтворення: {name.upper()}")
+        logging.info(f"Playing: {name.upper()}")
         return True
     except Exception as e:
         logging.error(f"Помилка відтворення {name}: {e}")
@@ -54,15 +52,14 @@ def play_event(name: str) -> bool:
 
 
 def main():
-    logging.info("🔊 Player Service запущено")
+    logging.info("Player Service started")
 
-    # Перевірка lock
     if LOCK_FILE.exists():
         try:
             with open(LOCK_FILE, "r") as f:
                 pid = int(f.read().strip())
             os.kill(pid, 0)
-            logging.error("❌ Player вже запущений. Вихід.")
+            logging.error("Player already running. Exit.")
             return
         except (OSError, ValueError):
             try: LOCK_FILE.unlink()
@@ -73,12 +70,11 @@ def main():
 
     try:
         alarm_played = False
-        logging.info("🔄 Головний цикл плеєра активний")
+        logging.info("Player main loop active")
 
         while True:
-            # 1. Найвищий пріоритет — ВІДБІЙ
             if flag_manager.is_set("cancel"):
-                logging.info("✅ Відбій тривоги")
+                logging.info("All-clear signal")
                 play_event("cancel")
                 flag_manager.clear_flag("cancel")
                 flag_manager.clear_flag("alarm")
@@ -87,19 +83,58 @@ def main():
                 time.sleep(8)
                 continue
 
-            # 2. ТРИВОГА
             if flag_manager.is_set("alarm"):
                 if not alarm_played:
                     if play_event("alarm"):
                         alarm_played = True
-                        logging.info("🚨 Сирена запущена (асинхронно)")
+                        logging.info("Siren started (async)")
                 time.sleep(1)
                 continue
 
-            # 3. ХВИЛИНА МОВЧАННЯ
             if flag_manager.is_set("moment"):
                 if flag_manager.is_set("alarm"):
-                    logging.info("🚨 Тривога активна — пропускаємо хвилину мовчання")
+                    logging.info("Alert active — skip minute of silence")
+                    flag_manager.clear_flag("moment")
+                    time.sleep(1)
+                    continue
+
+                logging.info("Minute of silence")
+                play_event("moment")
+                start = time.time()
+
+                while time.time() - start < 65:
+                    if not flag_manager.is_set("moment"):
+                        break
+                    if flag_manager.is_set("alarm") or flag_manager.is_set("cancel"):
+                        logging.info("Interrupted by alert/all-clear")
+                        stop_all_audio()
+                        break
+                    time.sleep(1)
+
+                flag_manager.clear_flag("moment")
+                alarm_played = False
+                continue
+
+            if alarm_played and not flag_manager.is_set("alarm"):
+                logging.info("Alert cancelled externally — stop sound")
+                stop_all_audio()
+                alarm_played = False
+
+            time.sleep(0.8)
+
+    except KeyboardInterrupt:
+        logging.info("Player Service stopped by user")
+    except Exception as e:
+        logging.critical(f"Critical error: {e}", exc_info=True)
+    finally:
+        stop_all_audio()
+        try: LOCK_FILE.unlink()
+        except: pass
+        logging.info("Player Service finished")
+
+
+if __name__ == "__main__":
+    main()
                     flag_manager.clear_flag("moment")
                     time.sleep(1)
                     continue
