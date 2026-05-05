@@ -1,0 +1,25 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run Player Service",
+			"type": "shell",
+			"command": "C:\\kyiv_alert\\venv\\Scripts\\python.exe",
+			"args": [],
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Run Player Service",
+			"type": "shell",
+			"command": "C:\\kyiv_alert\\venv\\Scripts\\python.exe",
+			"args": [
+				"c:\\kyiv_alert\\alert_monitor\\player_service.py"
+			],
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		}
+	]
+}

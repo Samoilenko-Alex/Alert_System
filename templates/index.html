@@ -1,0 +1,58 @@
+﻿<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kyiv Alert System</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+
+        <!-- Кнопка активації звуку -->
+        <button id="audio-status" class="audio-gate">
+            🔊 НАТИСНІТЬ ДЛЯ АКТИВАЦІЇ ЗВУКУ
+        </button>
+
+        <!-- Головний статус -->
+        <div class="main-status" id="main-status-bg">
+            <div id="status-circle" class="status-circle"></div>
+            <div id="status-text" class="status-val">ЧИСТО</div>
+            <div id="status-duration" class="timer-sub">Тривалість: 00:00:00</div>
+            <div id="server-time" class="server-time">Час сервера: --:--:--</div>
+        </div>
+
+        <!-- Панель дій -->
+        <div class="tools">
+            <button class="btn-tool" onclick="clearLogs()">🗑️ Очистити журнали</button>
+            <button class="btn-tool" onclick="showTestModal()">🛠️ ТЕСТ СИСТЕМИ</button>
+        </div>
+
+        <!-- Сервіси -->
+        <div class="services-container" id="services-container"></div>
+    </div>
+
+    <!-- Модальне вікно -->
+    <div id="testModal" class="modal">
+        <div class="modal-content">
+            <h2>ТЕСТ СИСТЕМИ</h2>
+            <p>Звук відтвориться тільки на цьому пристрої</p>
+            
+            <button class="btn-test" onclick="runLocalTest('alarm')">🚨 ТЕСТ ТРИВОГИ</button>
+            <button class="btn-test" onclick="runLocalTest('cancel')">✅ ТЕСТ ВІДБОЮ</button>
+            <button class="btn-test" onclick="runLocalTest('moment')">🕯️ ТЕСТ ХВИЛИНИ МОВЧАННЯ</button>
+            
+            <hr>
+            <button class="btn-test danger" onclick="runTest('stop_all')">🛑 АВАРІЙНА ЗУПИНКА ВСІХ ФЛАГІВ</button>
+            <button class="btn-close" onclick="hideTestModal()">Закрити</button>
+        </div>
+    </div>
+
+    <!-- Аудіо -->
+    <audio id="snd-alarm"  src="/static/audio/alarm.wav"  preload="auto"></audio>
+    <audio id="snd-cancel" src="/static/audio/cancel.wav" preload="auto"></audio>
+    <audio id="snd-moment" src="/static/audio/moment.wav" preload="auto"></audio>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+[
+    {
+        "date": "2026-04-06",
+        "start": "12:00:00",
+        "end": "12:30:00",
+        "duration_seconds": 1800,
+        "duration_human": "0:30:00"
+    },
+    {
+        "date": "2026-04-06",
+        "start": "21:38:28",
+        "end": "21:57:27",
+        "duration_seconds": 1139,
+        "duration_human": "0:18:59"
+    },
+    {
+        "date": "2026-04-09",
+        "start": "09:10:18",
+        "end": "09:30:20",
+        "duration_human": "00:20:01"
+    }
+]

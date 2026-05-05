@@ -1,0 +1,261 @@
+﻿<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kyiv Alert System | Control Panel v2.0</title>
+    <style>
+        :root {
+            --bg: #0a0a0c; --card: #161618; --accent: #00f2ea;
+            --error: #ff4d6d; --warning: #ffb703; --btn-on: #00f2ea;
+            --btn-off: #3c096c; --text: #e0e0e0; --console-bg: #000000;
+        }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .main-status { background: var(--card); padding: 40px; border-radius: 28px; margin-bottom: 25px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: all 0.6s; border: 1px solid #222; }
+        .status-alarm { animation: pulse-red 2s infinite; border: 2px solid var(--error); }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(255, 77, 109, 0.4); } 70% { box-shadow: 0 0 0 30px rgba(255, 77, 109, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 77, 109, 0); } }
+        .status-val { font-size: 4.5em; font-weight: 900; margin: 10px 0; text-transform: uppercase; letter-spacing: 3px; }
+        .timer-sub { font-family: 'Fira Code', monospace; font-size: 1.2em; color: #888; }
+        .audio-gate { background: var(--warning); color: #000; padding: 20px; border-radius: 18px; margin-bottom: 25px; text-align: center; cursor: pointer; font-weight: 800; border: none; width: 100%; font-size: 1.1em; }
+        .audio-gate.active { background: #2ecc71; color: #fff; opacity: 0.9; }
+        .tools { display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 20px; }
+        .btn-tool { background: #252529; color: #bbb; border: 1px solid #333; padding: 12px 22px; border-radius: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 600; }
+        .grid-scripts { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .script-card { background: var(--card); border-radius: 24px; padding: 25px; border: 1px solid #222; border-left: 10px solid #333; }
+        .script-card.active { border-left-color: var(--accent); }
+        .console { background: var(--console-bg); color: #00ff41; font-family: 'Fira Code', monospace; font-size: 13px; padding: 18px; border-radius: 16px; height: 160px; overflow-y: auto; margin-top: 18px; white-space: pre-wrap; border: 1px solid #111; }
+        .btn-start { min-width: 100px; padding: 12px 20px; border-radius: 14px; border: none; cursor: pointer; font-weight: 900; text-transform: uppercase; }
+        .btn-start.on { background: var(--btn-on); color: #000; }
+        .btn-start.off { background: var(--btn-off); color: #fff; opacity: 0.5; }
+        .indicator { width: 14px; height: 14px; border-radius: 50%; display: inline-block; margin-right: 15px; background: #444; }
+        .indicator.on { background: var(--accent); box-shadow: 0 0 15px var(--accent); }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); backdrop-filter: blur(10px); }
+        .modal-content { background: var(--card); margin: 8% auto; padding: 40px; border-radius: 35px; width: 380px; text-align: center; border: 1px solid #333; }
+        .btn-test { background: #2c2c2e; color: white; padding: 18px; border-radius: 16px; width: 100%; margin: 12px 0; border: 1px solid #444; cursor: pointer; font-weight: 700; }
+    </style>
+</head>
+<body>
+
+<audio id="snd-alarm" src="/static/audio/alarm.wav" loop preload="auto"></audio>
+<audio id="snd-cancel" src="/static/audio/cancel.wav" preload="auto"></audio>
+<audio id="snd-moment" src="/static/audio/moment.wav" preload="auto"></audio>
+
+<div class="container">
+    <button id="audio-status" class="audio-gate" onclick="enableAudio()">
+        🔊 НАТИСНІТЬ ДЛЯ АКТИВАЦІЇ МОНІТОРИНГУ ТА ЗВУКУ
+    </button>
+
+    <div class="main-status" id="main-status-bg">
+        <div id="status-text" class="status-val">СИНХРОНІЗАЦІЯ...</div>
+        <div class="timer-sub" id="status-duration">Тривалість: 00:00:00</div>
+        <div id="server-time" style="color: #aaa; font-weight: 500; font-size: 1.1em;">Server Time: --:--:--</div>
+    </div>
+
+    <div class="tools">
+        <button class="btn-tool" onclick="clearLogs()">🗑️ Очистити журнали</button>
+        <button class="btn-tool" onclick="document.getElementById('testModal').style.display='block'">🛠️ ПАНЕЛЬ КЕРУВАННЯ</button>
+    </div>
+
+    <div class="grid-scripts">
+        <div class="script-card" id="card-monitor">
+            <div class="header">
+                <div class="script-title"><i id="ind-monitor" class="indicator"></i> <b>📡 API MONITOR</b></div>
+                <button id="btn-monitor" class="btn-start off" onclick="toggle('monitor')">OFF</button>
+            </div>
+            <div id="log-monitor" class="console">Очікування запуску...</div>
+        </div>
+
+        <div class="script-card" id="card-player">
+            <div class="header">
+                <div class="script-title"><i id="ind-player" class="indicator"></i> <b>🔊 AUDIO ENGINE</b></div>
+                <button id="btn-player" class="btn-start off" onclick="toggle('player')">OFF</button>
+            </div>
+            <div id="log-player" class="console">Система готова...</div>
+        </div>
+
+        <div class="script-card" id="card-scheduler">
+            <div class="header">
+                <div class="script-title"><i id="ind-scheduler" class="indicator"></i> <b>⏰ SCHEDULER</b></div>
+                <button id="btn-scheduler" class="btn-start off" onclick="toggle('scheduler')">OFF</button>
+            </div>
+            <div id="log-scheduler" class="console">Графік завантажується...</div>
+        </div>
+    </div>
+</div>
+
+<div id="testModal" class="modal" onclick="this.style.display='none'">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h2 style="margin-top: 0; color: var(--accent); letter-spacing: 1px;">SYSTEM TEST</h2>
+        <p style="color: #888; margin-bottom: 25px;">Звук відтвориться ТІЛЬКИ на цьому ПК</p>
+        
+        <button class="btn-test" onclick="runLocalTest('alarm')">🚨 ТЕСТ ТРИВОГИ (ЛОКАЛЬНО)</button>
+        <button class="btn-test" onclick="runLocalTest('cancel')">✅ ТЕСТ ВІДБОЮ (ЛОКАЛЬНО)</button>
+        <button class="btn-test" onclick="runLocalTest('moment')">🕯️ ТЕСТ ХВИЛИНИ (ЛОКАЛЬНО)</button>
+        
+        <hr style="border: 0; border-top: 1px solid #333; margin: 25px 0;">
+        
+        <button class="btn-test" style="background: var(--error); border: none; color: #fff;" onclick="runTest('stop_all')">🛑 EMERGENCY STOP (ВСЮДИ)</button>
+    </div>
+</div>
+
+<script>
+    let audioEnabled = false;
+    let lastState = 'clear'; 
+    let stateStartTime = Date.now();
+    let localTestMode = false;   // ← Захист від дублювання під час тесту
+
+    function formatTime(ms) {
+        let s = Math.floor(ms / 1000);
+        let h = Math.floor(s / 3600);
+        let m = Math.floor((s % 3600) / 60);
+        s = s % 60;
+        return [h, m, s].map(v => v < 10 ? '0' + v : v).join(':');
+    }
+
+    function enableAudio() {
+        audioEnabled = true;
+        const gate = document.getElementById('audio-status');
+        gate.innerText = "✅ СИСТЕМА АКТИВОВАНА";
+        gate.classList.add('active');
+        
+        const sounds = ['snd-alarm', 'snd-cancel', 'snd-moment'];
+        sounds.forEach(id => {
+            const a = document.getElementById(id);
+            a.play().then(() => { a.pause(); a.currentTime = 0; }).catch(() => {});
+        });
+    }
+
+    function stopAllLocalSounds() {
+        ['snd-alarm', 'snd-cancel', 'snd-moment'].forEach(id => {
+            const a = document.getElementById(id);
+            a.pause();
+            a.currentTime = 0;
+        });
+    }
+
+    // === ОНОВЛЕНИЙ ЛОКАЛЬНИЙ ТЕСТ (без дублювання) ===
+    function runLocalTest(type) {
+        if (!audioEnabled) {
+            alert("Спочатку активуйте звук кнопкою зверху!");
+            return;
+        }
+        
+        stopAllLocalSounds();
+        
+        let duration = 10000;
+        
+        if (type === 'alarm') {
+            document.getElementById('snd-alarm').play();
+            lastState = 'alarm';
+            duration = 30000; // 30 секунд для тесту сирени
+        } 
+        else if (type === 'cancel') {
+            document.getElementById('snd-cancel').play();
+            lastState = 'clear';
+            duration = 5000;
+        } 
+        else if (type === 'moment') {
+            document.getElementById('snd-moment').play();
+            lastState = 'moment';
+            duration = 65000;
+        }
+        
+        localTestMode = true;
+        setTimeout(() => { localTestMode = false; }, duration);
+        
+        document.getElementById('testModal').style.display = 'none';
+        console.log("✅ Локальний тест запущено: " + type);
+    }
+
+    async function update() {
+        try {
+            const r = await fetch('/status');
+            if (!r.ok) throw new Error("Network response was not ok");
+            const data = await r.json();
+            
+            const st = document.getElementById('status-text');
+            const bg = document.getElementById('main-status-bg');
+            const dur = document.getElementById('status-duration');
+
+            st.innerText = data.status_text;
+            document.getElementById('server-time').innerText = "Server Time: " + data.server_time;
+
+            bg.classList.remove('status-alarm');
+            if (data.is_alarm) {
+                st.style.color = 'var(--error)';
+                bg.classList.add('status-alarm');
+            } else if (data.is_moment) {
+                st.style.color = 'var(--warning)';
+                bg.style.boxShadow = "0 0 50px rgba(255, 183, 3, 0.3)";
+            } else {
+                st.style.color = 'var(--accent)';
+                bg.style.boxShadow = "0 15px 35px rgba(0,0,0,0.6)";
+            }
+
+            // === АУДІО ЛОГІКА З ЗАХИСТОМ ВІД ДУБЛЮВАННЯ ===
+            if (audioEnabled && !localTestMode) {
+                const shouldMoment = data.is_moment;
+                const shouldAlarm  = data.is_alarm && !data.is_moment;
+
+                if (shouldMoment && lastState !== 'moment') {
+                    stopAllLocalSounds();
+                    document.getElementById('snd-moment').play();
+                    lastState = 'moment';
+                    stateStartTime = Date.now();
+                }
+                else if (shouldAlarm && lastState !== 'alarm') {
+                    stopAllLocalSounds();
+                    document.getElementById('snd-alarm').play();
+                    lastState = 'alarm';
+                    stateStartTime = Date.now();
+                }
+                else if (!shouldMoment && !shouldAlarm && lastState !== 'clear') {
+                    stopAllLocalSounds();
+                    if (lastState === 'alarm') {
+                        document.getElementById('snd-cancel').play();
+                    }
+                    lastState = 'clear';
+                    stateStartTime = Date.now();
+                }
+            }
+
+            dur.innerText = "Тривалість: " + formatTime(Date.now() - stateStartTime);
+
+            ['monitor', 'player', 'scheduler'].forEach(name => {
+                const isActive = data.scripts[name] === 'RUNNING';
+                document.getElementById('ind-'+name).className = 'indicator' + (isActive ? ' on' : '');
+                document.getElementById('card-'+name).className = 'script-card' + (isActive ? ' active' : '');
+                const btn = document.getElementById('btn-' + name);
+                btn.innerText = isActive ? "ON" : "OFF";
+                btn.className = "btn-start " + (isActive ? "on" : "off");
+                const logBox = document.getElementById('log-'+name);
+                if (logBox.innerText !== data.logs[name]) {
+                    logBox.innerText = data.logs[name] || "Логи порожні...";
+                    logBox.scrollTop = logBox.scrollHeight;
+                }
+            });
+
+        } catch (e) { 
+            document.getElementById('status-text').innerText = "OFFLINE";
+            document.getElementById('status-text').style.color = "#444";
+        }
+    }
+
+    function toggle(name) { fetch('/toggle/' + name); }
+    
+    function runTest(a) { 
+        if (a === 'stop_all') {
+            stopAllLocalSounds();
+        }
+        fetch('/manual/' + a).then(() => update());
+        document.getElementById('testModal').style.display = 'none'; 
+    }
+    
+    function clearLogs() { if(confirm("Очистити журнали?")) fetch('/clear_logs'); }
+
+    setInterval(update, 1500);
+    update();
+</script>
+</body>
+</html>

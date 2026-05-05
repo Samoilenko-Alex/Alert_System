@@ -1,0 +1,197 @@
+:root {
+    --bg: #0a0a0c;
+    --card: rgba(22, 22, 24, 0.92);
+    --accent: #00f2ea;
+    --error: #ff4d6d;
+    --warning: #ffb703;
+    --success: #2ecc71;
+    --text: #e0e0e0;
+    --console: #0f0f12;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    margin: 0;
+    padding: 16px;
+    min-height: 100vh;
+}
+
+.container { max-width: 1000px; margin: 0 auto; }
+
+/* Головний статус */
+.main-status {
+    background: var(--card);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 28px;
+    padding: 32px 20px;
+    text-align: center;
+    margin-bottom: 24px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.7);
+}
+
+.status-circle {
+    width: 92px;
+    height: 92px;
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    background: #222;
+    box-shadow: 0 0 45px var(--accent);
+    transition: all 0.6s ease;
+}
+
+.status-val {
+    font-size: 3.9rem;
+    font-weight: 900;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    margin: 8px 0 12px;
+}
+
+.timer-sub, .server-time {
+    font-family: 'Fira Code', monospace;
+    font-size: 1.18rem;
+    color: #aaa;
+}
+
+/* Кнопка звуку */
+.audio-gate {
+    width: 100%;
+    padding: 20px;
+    background: linear-gradient(90deg, #00c853, #00f2ea);
+    color: #000;
+    font-size: 1.25rem;
+    font-weight: 800;
+    border: none;
+    border-radius: 20px;
+    margin-bottom: 24px;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0, 242, 234, 0.5);
+}
+
+.audio-gate.active {
+    background: #2ecc71;
+    box-shadow: 0 10px 30px rgba(46, 204, 113, 0.6);
+}
+
+/* Панель кнопок */
+.tools {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 28px;
+}
+
+.btn-tool {
+    flex: 1;
+    padding: 16px 20px;
+    background: rgba(37, 37, 41, 0.9);
+    color: #ddd;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 1.05rem;
+}
+
+/* Сервіси */
+.services-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.service-card {
+    background: var(--card);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.service-header {
+    padding: 18px 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.service-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.toggle-btn {
+    padding: 10px 26px;
+    border-radius: 14px;
+    border: none;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.toggle-btn.on  { background: var(--accent); color: #000; }
+.toggle-btn.off { background: #3c096c; color: #fff; }
+
+/* Згортаючі логи */
+.log-container {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    background: var(--console);
+}
+
+.log-container.open { max-height: 380px; }
+
+.console {
+    padding: 18px;
+    font-family: 'Fira Code', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #00ff41;
+    overflow-y: auto;
+    white-space: pre-wrap;
+}
+
+/* Модальне вікно */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--card);
+    padding: 32px;
+    border-radius: 28px;
+    width: 92%;
+    max-width: 440px;
+    text-align: center;
+}
+
+.btn-test {
+    width: 100%;
+    padding: 18px;
+    margin: 10px 0;
+    border-radius: 16px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-test.danger { background: var(--error); color: white; }
+.btn-close {
+    margin-top: 15px;
+    background: transparent;
+    border: 1px solid #555;
+    color: #aaa;
+    padding: 12px 28px;
+    border-radius: 12px;
+}
